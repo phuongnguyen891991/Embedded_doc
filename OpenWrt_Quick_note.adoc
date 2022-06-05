@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 = OpenWrt Quick Note
 :sectnums: all
 :sectnumlevels: 5
@@ -152,3 +153,6 @@ uci commit network
 == Tham khảo:
 * https://openwrt.org/docs/guide-developer/procd-init-scripts
 * https://openwrt.org/docs/guide-developer/procd-init-script-example
+=======
+
+>>>>>>> main
