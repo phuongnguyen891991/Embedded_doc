@@ -23,7 +23,7 @@
 
 . Ví dụ
 * Tạo 1 scripts có tên `99-my-action`.
-* Mỗi khi có hardware trigger, interface up hoặc down, sẽ in ra log của mình:
+* Mỗi khi có hardware trigger, interface `up` hoặc `down`, sẽ in ra log của mình:
 
 .. Bước 1: tạo scripts với nội dung sau:
 +
@@ -78,17 +78,18 @@ shutdown() {
 +
 [NOTE]
 ====
-Bằng rc.common, một số command sẵn có bên trong scripts gồm:
-    start   Khởi động the service
-    stop    Ngưng the service
-    restart Tái khởi động các service
-    reload  load lại các file config. (or restart if that fails)
-    enable  Cho phép khởi động service một cách tự động.
-    disable Tắt khởi động service một cách tự động.
+Bằng `rc.common`, một số command sẵn có bên trong scripts gồm:
+
+* `start`:   Khởi động the service
+* `stop`:    Ngưng the service
+* `restart`: Tái khởi động các service
+* `reload`:  load lại các file config. (or restart if that fails)
+* `enable`:  Cho phép khởi động service một cách tự động.
+* `disable`: Tắt khởi động service một cách tự động.
 ====
 
 . Ứng dụng
-.. Bước 1: tạo scripts service in chữ hell0 và lưu tại `/var/myscript.sh`
+.. Bước 1: tạo scripts service in chữ `hello` và lưu tại `/var/myscript.sh`
 +
 [source, shell]
 ----
@@ -124,7 +125,7 @@ start_service() {
 
 [NOTE]
 ====
-* Nếu scripts service exits với code trả về là 0, nó sẽ bị xóa ngay sau đó.
+* Nếu scripts service exits với code trả về là `0`, nó sẽ bị xóa ngay sau đó.
 * Nếu scripts service exits với code khác `0`, nó sẽ không bị xóa và sẽ được kích hoạt lần nữa ở lần bootup tiếp theo cho đến khi nào thành công thì thoai.
 ====
 
