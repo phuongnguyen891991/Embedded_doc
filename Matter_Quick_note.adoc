@@ -53,6 +53,10 @@ image:project_chip_stack.jpg[]
 image:matter_architecture.jpg[]
 ** Lớp Matter application có thể chia nhỏ, trải dài vùng hoạt đồng từ tầng 5 (session layer) đến tầng 7 (application layer)
 
+==== Matter device
+* Hình ảnh bên dưới mô tả cấu trúc của Matter application chạy trên `nrf Connect SDK` platform và sử  dụng BLE & Thread stack cho mục đích giao tiếp:
+image:nrf Connect Platform overview.png[]
+
 === Tích hợp vào hệ thống (nrf SDK Nordic)
 * Để có cái nhìn tổng quan và ứng dụng của Matter, chúng ta xem xét ví dụ của Matter được tích hợp bên trong SDK của nordic như sau:
 +
@@ -84,6 +88,49 @@ image:matter_template_sample.jpg[]
 ** CMake: Được sử dụng bởi các phần liên quan đến nRF Connect Platform. (thường gọi là nRF Connect SDK và Zephys).
 
 ==== Matter - Cluster, Attributes, Command
+* Mỗi Matter data, vể cơ bản sẽ có cấu tạo như sau:
++
+image:Matter_data_model.png[]
+
+
+* Trong đó:
++
+image:matter_element_of_matter.png[]
+
+** *Node*: Là địa chỉa mạng duy nhất trong mạng có chức năng riêng, thường là một thiết bị vật lí mà người dùng dễ dàng nhận biết.
+
+** *Endpoint*: Mỗi node sẽ có một số enpoints, mỗi enpoint có thể hiểu là như một devices ảo cung cấp các service riêng nhưng có thể kết hợp lại với nhau trong cùng 1 device 1 cách hợp lí.
+*** Ví dụ như chúng ta có 2 cái bóng đèn riêng biệt: 1 cái có thể điều chỉnh được độ sáng (dimmable), 1 cái chỉ có thể tắt và mở (on-off). Vậy sẽ có enpoint sở hữu tính năng dimmmable và endpoint sở hữu tính năng on-off.
+*** Enpoint 0 được dành riêng, (cụ thể về enpoint 0 sẽ được mô tả kĩ hơn bên dưới)
+
+** *Cluster*: Một cluster cùng chức năng được nhóm lại với nhau để tái sử dụng.
+
+** *Attributes*: Các thuộc tính cho biết các enponint sở hữu thuộc tính này có thể đọc hoặc ghi.
+**** Các Attribute này có thể cố định hoặc bị mất đi (mất sau khi reboot) hoặc là chỉ có thể đọc, hoặc là đọc-ghi.
+Ví dụ: OnOff cluster sẽ có thuộc tính onoff tương ứng với trạng thái hiện tại. LevelControl cluster sẽ có thuộc tính LeveControl tương ứng với level hiện tại đã được setup trước đó.
+
+** *Command*: Cung cấp khả năng gọi (invoke) một tính năng/chức năng cụ thể nào đó trên cluster. Command có thể có các tham số tương đi kèm với nó.
+Ví dụ: OnOff cluster có command Toggle, cho phép toggles (tắt mở/chạm/đổi trạng thái) của thuộc tính OnOff trong cluster.
+
+- Đây chỉ là một số thành phần trong Matter data model. Trong Matter spec sẽ cung cấp danh sách tiêu chuẩn của các cluster, các thuộc tính và command của các cluster đó.
+
+===== Cluster servers và Clients
+* Mỗi Matter Cluster có một cluster server và cluster client tương ứng.
++
+image:Matter_cluster.jpeg[]
++
+trong đó:
++
+** Matter Switch devices bổ sung OnOff cluster và Level Control cluster clients. Client này sẽ nói chuyện với server tương ứng trên bóng đèn để điều khiển.
+
+
+===== The Endpoint 0
+* Đây là một endpoint với `Root Node`` device type.
+* Endpoint đặc biệt này có cluster chỉ định cho toàn bộ Matter node. Một số cluster là một phần quan trọng trong enpoint này gồm có:
+** `Basic Information Cluster`: Cung cấp các thông tin cơ bản của một device như là: Firmware version, thông tin nhà sản xuất, ....
+** `ACL Cluster server`: Cho phép cấu hình Access control list (danh sách truy cập để điều khiển) của node.
+** `ACL Commisioning Cluster Server`: Cho phép cấu hình của một network (Wi-Fi, Ethernet, Thread) trên con node
+
 ==== Matter - Device-to-Device Automations
 ==== Matter - Bridge for non-Matter Devices
 ==== Matter - Multi-Admin, Identifiers, and Fabrics
@@ -95,7 +142,36 @@ image:nrf Connect Platform overview.png[]
 == Ứng dụng và ví dụ
 
 === Mô hình mạng ứng dụng (topology network)
+. Mô hình mạng ứng dụng chung
++
+image:matter_protocols_controllers.jpg[]
 
+.. Giải thích về mô hình ứng dụng
+*  Để cho phép IPv6 giao tiếp giữa các *Matter* accessory và *Matter* controller thông qua thread network, *Matter* controller yêu cầu Thread Border router.
+* Trong topo này, *Matter* controller không hỗ trợ chuẩn thread network 802.15.4. Border router sẽ là cầu nối giữa thread network với network interface của controller, trong ví dụ này là Wi-Fi.
+* Môi trường phát triển của *Matter* được thiết lập phụ thuộc vào việc Matter controller work ở đâu và work như thế nào trong mô hình mạng chung, các mô hình mạng cụ thể được mô tả bên dưới:
+
+. Thread Border Router sử dụng Raspberry Pi và Matter controller trên PC (CHIP Tool for Linux or macOS)
++
+image:matter_otbr_controller_separate_pc.jpg[]
+
+. Thread Border Router sử dụng Raspberry Pi and Matter controller chạy trên mobile (CHIP Tool for Android)
++
+image:matter_otbr_controller_separate_mobile.jpg[]
+
+. Thread Border Router and Matter controller trên cùng 1 device
++
+image:matter_otbr_controller_same_device.jpg[]
+
+=== Config bắt buộc trong Matter
+* Để sử dụng Matter protocol, cần một số Kconfig sau:
+** `CONFIG_CHIP`: Việc trigger biến này sẽ cho phép Matter protocol stack (giao thức Matter) và một số Kconfig liên quan khác, nó cũng bao gồm cả biên `CONFIG_CHIP_ENABLE_DNSSD_SRP` được yêu cầu trong việc discover (tìm kiếm) các Matter devices bằng cách sử dungj DNS-SD.
+
+** `CONFIG_CHIP_PROJECT_CONFIG`: biến số này sẽ định nghĩa đường dẫn đến file config, file này chỉ định cho một số thiết lập như là: Vendor ID, Product ID và một số  thiết lập đặc biệt khác của Matter setting.
+
+** Vì Matter là lớp application trên cùng, nên sẽ sử dụng nhiều module software khác nhau, để có thể giao tiếp giữa device và các tính năng cần thiết của nó.
+
+** Matter sử dụng các module như là: Bluetooth® LE, the IPv6 stack (currently, only Thread is supported), nRF Security, or MCUboot.
 
 === Mô tả ứng dụng
 
